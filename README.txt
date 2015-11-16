@@ -83,7 +83,7 @@ the theme file 'swiftmailer.tpl.php'. Additional variables might be added by
 Drupal or other modules.
 
 $key
-  The key which identifies the e-mail. This is the $key provided to 
+  The key which identifies the e-mail. This is the $key provided to
   drupal_mail() which identifies the e-mail.
 $to
   The recipient's e-mail address.
@@ -122,12 +122,12 @@ can be attached to e-mails.
 3.1 Attachments
 
 You can easily add attachments to e-mails. This can be done programatically by
-defining one or more files to attach. 
+defining one or more files to attach.
 
 All files which are to be attached to an e-mail need to be represented as
 instances of stdClass. This makes it easy for you to add files that are managed
 by Drupal, as the file_load() function will return an stdClass instance which
-represents a given file. 
+represents a given file.
 
 All stdClass instances returned by Drupal which represents files are populated
 with the fields 'uri', 'filename' and 'filemime'. Thus, if you would like to
@@ -253,9 +253,9 @@ function modulename_mail($key, &$message, $params) {
 
   switch($key) {
     default:
-      
+
       $logo_id = '390ffcm-sdfd94f';
-    
+
       $text[] = '<img src="cid:' . $logo_id . '" />;
       $text[] = t('<p>This is an automatically generated test e-mail with an
                    inline image..</p>');
