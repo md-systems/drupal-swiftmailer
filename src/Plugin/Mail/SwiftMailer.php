@@ -7,22 +7,28 @@
 
 namespace Drupal\swiftmailer\Plugin\Mail;
 
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Mail\MailInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\swiftmailer\Utility\Conversion;
 use Exception;
 use Html2Text\Html2Text;
+use Psr\Log\LoggerInterface;
 use Swift_Attachment;
 use Swift_FileSpool;
+use Swift_Image;
 use Swift_Mailer;
 use Swift_MailTransport;
 use Swift_Message;
-use Drupal\swiftmailer\Utility\Conversion;
 use Swift_SendmailTransport;
 use Swift_SmtpTransport;
 use Swift_SpoolTransport;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'Swift Mailer' plugin to send emails.
@@ -33,8 +39,11 @@ use Swift_SpoolTransport;
  *   description = @Translation("Swift Mailer Plugin.")
  * )
  */
-class SwiftMailer implements MailInterface {
+class SwiftMailer implements MailInterface, ContainerFactoryPluginInterface {
 
+  /**
+   * @var array
+   */
   protected $config;
 
   /**
@@ -52,12 +61,34 @@ class SwiftMailer implements MailInterface {
    */
   protected $moduleHandler;
 
-  function __construct() {
-    $this->config['transport'] = \Drupal::config('swiftmailer.transport')->getRawData();
-    $this->config['message'] = \Drupal::config('swiftmailer.message')->getRawData();
-    $this->logger = \Drupal::logger('swiftmailer');
-    $this->renderer = \Drupal::service('renderer');
-    $this->moduleHandler = \Drupal::moduleHandler();
+  /**
+   * SwiftMailer constructor.
+   *
+   * @param \Drupal\Core\Config\ImmutableConfig $transport
+   * @param \Drupal\Core\Config\ImmutableConfig $message
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   */
+  function __construct(ImmutableConfig $transport, ImmutableConfig $message, LoggerInterface $logger, RendererInterface $renderer, ModuleHandlerInterface $module_handler) {
+    $this->config['transport'] = $transport->getRawData();
+    $this->config['message'] = $message->getRawData();
+    $this->logger = $logger;
+    $this->renderer = $renderer;
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $container->get('config.factory')->get('swiftmailer.transport'),
+      $container->get('config.factory')->get('swiftmailer.message'),
+      $container->get('logger.factory')->get('swiftmailer'),
+      $container->get('renderer'),
+      $container->get('module_handler')
+    );
   }
 
   /**
@@ -75,7 +106,7 @@ class SwiftMailer implements MailInterface {
     // Get default mail line endings and merge all lines in the e-mail body
     // separated by the mail line endings.
     $line_endings = Settings::get('mail_line_endings', PHP_EOL);
-    $message['body'] = SafeMarkup::set(implode($line_endings, $message['body']));
+    $message['body'] = implode($line_endings, $message['body']);
 
     // Get applicable format.
     $applicable_format = $this->getApplicableFormat($message);
@@ -139,19 +170,6 @@ class SwiftMailer implements MailInterface {
    *   TRUE if the message was successfully sent, and otherwise FALSE.
    */
   public function mail(array $message) {
-    // Validate whether the Swift Mailer module has been configured.
-    /*
-    $library_path = variable_get('swiftmailer_path', SWIFTMAILER_VARIABLE_PATH_DEFAULT);
-    if (empty($library_path)) {
-      watchdog('swiftmailer', 'An attempt to send an e-mail failed. The Swift Mailer library could not be found by the Swift Mailer module.', array(), WATCHDOG_ERROR);
-      drupal_set_message(t('An attempt to send the e-mail failed. The e-mail has not been sent.'), 'error');
-      return;
-    }
-
-    // Include the Swift Mailer library.
-    require_once(DRUPAL_ROOT . '/' . $library_path . '/lib/swift_required.php');
-    */
-
     try {
 
       // Create a new message.
