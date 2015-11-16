@@ -100,10 +100,13 @@ class SwiftMailer implements MailInterface {
     // paths are replaced with cid's. Each image gets added to the array
     // which keeps track of which images to embed in the e-mail.
     $embeddable_images = array();
+    $processed_images = array();
     preg_match_all('/"image:([^"]+)"/', $message['body'], $embeddable_images);
     for ($i = 0; $i < count($embeddable_images[0]); $i++) {
-
       $image_id = $embeddable_images[0][$i];
+      if (isset($processed_images[$image_id])) {
+        continue;
+      }
       $image_path = trim($embeddable_images[1][$i]);
       $image_name = basename($image_path);
 
@@ -118,6 +121,7 @@ class SwiftMailer implements MailInterface {
       $image->cid = rand(0, 9999999999);
       $message['params']['images'][] = $image;
       $message['body'] = preg_replace($image_id, 'cid:' . $image->cid, $message['body']);
+      $processed_images[$image_id] = 1;
     }
 
     return $message;
