@@ -263,6 +263,11 @@ class SwiftMailer implements MailInterface {
         $this->attach($m, $message['params']['files']);
       }
 
+      // Attach files (provide compatibility with mimemail)
+      if (!empty($message['params']['attachments']) && is_array($message['params']['attachments'])) {
+        $this->attachAsMimeMail($m, $message['params']['attachments']);
+      }
+
       // Embed images.
       if (!empty($message['params']['images']) && is_array($message['params']['images'])) {
         $this->embed($m, $message['params']['images']);
@@ -389,6 +394,43 @@ class SwiftMailer implements MailInterface {
       }
     }
 
+  }
+
+  /**
+   * Process MimeMail attachments.
+   *
+   * @param Swift_Message $m
+   *   The message which attachments are to be added to.
+   * @param array $attachments.
+   *   The attachments which are to be added message.
+   */
+  private function attachAsMimeMail(Swift_Message $m, array $attachments) {
+    // Iterate through each array element.
+    foreach ($attachments as $a) {
+      if (is_array($a)) {
+        // Validate that we've got either 'filepath' or 'filecontent.
+        if (empty($a['filepath']) && empty($a['filecontent'])) {
+          continue;
+        }
+
+        // Validate required fields.
+        if (empty($a['filename']) || empty($a['filemime'])) {
+          continue;
+        }
+
+        // Attach file (either using a static file or provided content).
+        if (!empty($a['filepath'])) {
+          $file = new stdClass();
+          $file->uri = $a['filepath'];
+          $file->filename = $a['filename'];
+          $file->filemime = $a['filemime'];
+          $this->attach($m, array($file));
+        }
+        else {
+          $m->attach(Swift_Attachment::newInstance($a['filecontent'], $a['filename'], $a['filemime']));
+        }
+      }
+    }
   }
 
   /**
