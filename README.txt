@@ -162,13 +162,14 @@ function test() {
   $file_two->uri = 'sites/default/files/images/logo.jpg';
   $file_two->filename = 'drupal_logo.jpg';
   $file_two->filemime = 'image/jpeg';
-  
+
   // Add attachments.
   $p['files'][] = $file_one;
   $p['files'][] = $file_two;
 
   // Send e-mail.
-  drupal_mail('modulename', 'key', 'test@test.com', language_default(), $p);
+  $mail_manager = \Drupal::service('plugin.manager.mail');
+  $mail_manager->mail('modulename', 'key', 'test@test.com', \Drupal::service("language.default")->get()->getId(), $p);
 }
 
 /**
