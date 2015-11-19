@@ -364,6 +364,9 @@ class Conversion {
    *
    * @param $value
    *    A string holding one or more mailboxes.
+   *
+   * @return array
+   *   this return array
    */
   public static function swiftmailer_parse_mailboxes($value) {
 
