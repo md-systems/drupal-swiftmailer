@@ -7,12 +7,15 @@
 
 namespace Drupal\swiftmailer\Plugin\Mail;
 
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Mail\MailInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\swiftmailer\Utility\Conversion;
@@ -103,10 +106,7 @@ class SwiftMailer implements MailInterface, ContainerFactoryPluginInterface {
    *   The message as it should be sent.
    */
   public function format(array $message) {
-    // Get default mail line endings and merge all lines in the e-mail body
-    // separated by the mail line endings.
-    $line_endings = Settings::get('mail_line_endings', PHP_EOL);
-    $message['body'] = implode($line_endings, $message['body']);
+    $message = $this->massageMessageBody($message);
 
     // Get applicable format.
     $applicable_format = $this->getApplicableFormat($message);
@@ -580,6 +580,26 @@ class SwiftMailer implements MailInterface, ContainerFactoryPluginInterface {
 
     return $applicable_charset;
 
+  }
+
+  /**
+   * Massages the message body into the format expected for rendering.
+   *
+   * @param array $message
+   *   The message.
+   *
+   * @return array
+   */
+  public function massageMessageBody(array $message) {
+    // Get default mail line endings and merge all lines in the e-mail body
+    // separated by the mail line endings. Keep Markup objects and escape others
+    // and then treat the result as safe markup.
+    $line_endings = Settings::get('mail_line_endings', PHP_EOL);
+    $message['body'] = Markup::create(implode($line_endings, array_map(function ($body) {
+      // If $item is not marked safe then it will be escaped.
+      return $body instanceOf MarkupInterface ? $body : Html::escape($body);
+    }, $message['body'])));
+    return $message;
   }
 
 }
