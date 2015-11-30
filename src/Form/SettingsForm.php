@@ -40,10 +40,6 @@ class SettingsForm extends ConfigFormBase {
       '#markup' => '<p>' . t('This page allows you to configure settings which determines how e-mail messages are sent.') . '</p>',
     );
 
-    // Validate that the Swift Mailer library is available. Configuration options
-    // should only be displayed if the library is available.
-    if (swiftmailer_validate_library($config->get('path', SWIFTMAILER_VARIABLE_PATH_DEFAULT))) {
-
       $form['transport'] = array(
         '#id' => 'transport',
         '#type' => 'details',
@@ -231,16 +227,6 @@ class SettingsForm extends ConfigFormBase {
         '#description' => t('The absolute path to the spool directory.'),
         '#default_value' => $config->get('spool_directory', sys_get_temp_dir() . '/swiftmailer-spool'),
       );
-    }
-    else {
-
-      $form['message'] = array(
-        '#markup' => t('<p>You need to configure the location of the Swift Mailer library. Please visit the !page
-        and configure the library to enable the configuration options on this page.</p>',
-          array('!page' => \Drupal::l($this->t('library configuration page'), 'admin/config/people/swiftmailer'))),
-      );
-
-    }
 
     return $form;
   }

@@ -5,42 +5,6 @@
  */
 
 /**
- * Validates whether the Swift Mailer library is available at the provided path.
- *
- * @param string $path
- *   The path to the base directory of the Swift Mailer library
- *
- * @return mixed
- *   The provided path exluding leading and trailing slashes if the Swift Mailer
- *   library is available at the provided path, and otherwise FALSE.
- */
-function swiftmailer_validate_library($path) {
-  return TRUE;
-
-  // Remove leading slashes.
-  while (drupal_substr($path, 0, 1) === '/') {
-    $path = drupal_substr($path, 1);
-  }
-
-  // Remove trailing slashes.
-  while (drupal_substr($path, -1) === '/') {
-    $path = drupal_substr($path, 0, -1);
-  }
-
-  // Get the real path of the 'swift_required.php' file.
-  $real_path = DRUPAL_ROOT . '/' . $path . '/lib/swift_required.php';
-
-  // Returns whether the 'swift_required.php' file could be found.
-  if (file_exists($real_path)) {
-    return $path;
-  }
-  else {
-    return FALSE;
-  }
-
-}
-
-/**
  * Returns a list of available encryption options.
  *
  * @return array

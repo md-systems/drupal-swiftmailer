@@ -37,8 +37,6 @@ class MessagesForm extends ConfigFormBase {
       '#markup' => '<p>' . t('This page allows you to configure settings which determines how e-mail messages are created.') . '</p>',
     );
 
-    if (swiftmailer_validate_library($config->get('path', SWIFTMAILER_VARIABLE_PATH_DEFAULT))) {
-
       $form['format'] = array(
         '#type' => 'fieldset',
         '#title' => t('Message format'),
@@ -94,16 +92,7 @@ class MessagesForm extends ConfigFormBase {
         '#options' => swiftmailer_get_character_set_options(),
         '#default_value' => $config->get('character_set', SWIFTMAILER_VARIABLE_CHARACTER_SET_DEFAULT),
       );
-    }
-    else {
 
-      $form['message'] = array(
-        '#markup' => '<p>' . t('You need to configure the location of the Swift Mailer library. Please visit the !page
-          and configure the library to enable the configuration options on this page.',
-          array('!page' => _l(t('library configuration page'), 'admin/config/people/swiftmailer'))) . '</p>',
-      );
-
-    }
 
     return $form;
   }
